@@ -13,7 +13,8 @@ import collections
 
 #main program
 #get services
-s = Service('C:/Users/z0033n5z/Downloads/chromedriver/chromedriver.exe')
+#s = Service('C:/Users/z0033n5z/Downloads/chromedriver/chromedriver.exe')
+s = Service('D:/7_Tool_dan_Skrip/IsiWBIT-main/chromedriver.exe')
 driver = webdriver.Chrome(service=s)
 
 #open the web page
@@ -35,8 +36,9 @@ start_time_index = 1
 hours_spent_index = 2
 project_index = 3
 work_code_index = 4
-description_index = 5
-location_index = 6
+work_code_timesheet = 5
+description_index = 6
+location_index = 7
 
 check_xpath = '//*[@id="f111"]/table/tbody/tr/td/table[1]/tbody/tr[1]/td[4]/span[1]/select'
 WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.XPATH, check_xpath)))
@@ -67,9 +69,11 @@ for rowss in d.keys():
                 refresh_button.click()
                 # refind tbody
                 tbody = driver.find_element(By.XPATH, tbody_xpath)
-            except:
-                print("something wrong")
-                continue
+            except Exception as ex :
+                print("error during selection of dates")
+                print(ex)
+                raise
+                exit
         # now find table with date
         try:
             date_td = tbody.find_element(By.XPATH, "//a[text()='" + str(d[rowss][0][date_index].day) + "']")
@@ -86,49 +90,78 @@ for rowss in d.keys():
                 print(rows)
                 #now fill each row
                 #find start date
-                start_date = tab_body.find_element(By.XPATH,'.//td[text()="' + str(i) + '."]').find_element(By.XPATH,'..')\
-                             .find_element(By.XPATH, ".//input[@name='start" + str(i) + "']")
-                start_date.clear()
-                start_date.send_keys(rows[start_time_index].strftime("%H:%M"))
+                try :
+                    start_date = tab_body.find_element(By.XPATH,'.//td[text()="' + str(i) + '."]').find_element(By.XPATH,'..')\
+                                .find_element(By.XPATH, ".//input[@name='start" + str(i) + "']")
+                    start_date.clear()
+                    start_date.send_keys(rows[start_time_index].strftime("%H:%M"))
+                except Exception as ex :
+                    print("error during filling of start hour")
+                    print(ex)
+                    raise
+                    exit
+
                 #end date
-                end_date = tab_body.find_element(By.XPATH, './/td[text()="' + str(i) + '."]').find_element(By.XPATH,'..') \
-                    .find_element(By.XPATH, ".//input[@name='end" + str(i) + "']")
-                end_date.clear()
-                enddate = (datetime.combine(rows[date_index], rows[start_time_index]) + timedelta(minutes= rows[hours_spent_index].minute, hours = rows[hours_spent_index].hour)).time()
-                end_date.send_keys(enddate.strftime("%H:%M"))
+                try: 
+                    end_date = tab_body.find_element(By.XPATH, './/td[text()="' + str(i) + '."]').find_element(By.XPATH,'..') \
+                        .find_element(By.XPATH, ".//input[@name='end" + str(i) + "']")
+                    end_date.clear()
+                    enddate = (datetime.combine(rows[date_index], rows[start_time_index]) + timedelta(minutes= rows[hours_spent_index].minute, hours = rows[hours_spent_index].hour)).time()
+                    end_date.send_keys(enddate.strftime("%H:%M"))
+                except Exception as ex :
+                    print("error during filling of end hour")
+                    print(ex)
+                    raise
+                    exit
+                
                 #work code
-                work_code = tab_body.find_element(By.XPATH, './/td[text()="' + str(i) + '."]').find_element(By.XPATH,'..') \
-                    .find_element(By.XPATH, ".//input[@name='prodx" + str(i) + "']").find_element(By.XPATH,'./following-sibling::a')
-                work_code.click()
-                MainWindow = driver.window_handles[0]
-                #switch to pop up window
-                WorkCode_Window = driver.window_handles[1]
-                driver.switch_to.window(WorkCode_Window)
-                work_code_table = driver.find_element(By.XPATH,'/html/body/form/div/table/tbody/tr[3]/td/table/tbody')
-                work_code_table.find_element(By.XPATH,".//input[@value='"+ rows[work_code_index] + "']").click()
-                driver.find_element(By.XPATH,'/html/body/form/div/input[2]').click()
-                driver.switch_to.window(MainWindow)
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, dtm_start_xpath)))
+                try:
+                    work_code = tab_body.find_element(By.XPATH, './/td[text()="' + str(i) + '."]').find_element(By.XPATH,'..') \
+                        .find_element(By.XPATH, ".//input[@name='prodx" + str(i) + "']").find_element(By.XPATH,'./following-sibling::a')
+                    work_code.click()
+                    MainWindow = driver.window_handles[0]
+                    #switch to pop up window
+                    WorkCode_Window = driver.window_handles[1]
+                    driver.switch_to.window(WorkCode_Window)
+                    work_code_table = driver.find_element(By.XPATH,'/html/body/form/div/table/tbody/tr[3]/td/table/tbody')
+                    work_code_table.find_element(By.XPATH,".//input[@value='"+ rows[work_code_index] + "']").click()
+                    driver.find_element(By.XPATH,'/html/body/form/div/input[2]').click()
+                    driver.switch_to.window(MainWindow)
+                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, dtm_start_xpath)))
+                except Exception as ex :
+                    print("error during filling of work code")
+                    print(ex)
+                    raise
+                    exit
+
                 #location
-                location = tab_body.find_element(By.XPATH, './/td[text()="' + str(i) + '."]').find_element(By.XPATH,'..') \
-                    .find_element(By.XPATH, ".//input[@name='loc" + str(i) + "']").find_element(By.XPATH,'./following-sibling::a')
-                location.click()
-                Location_Window = driver.window_handles[1]
-                driver.switch_to.window(Location_Window)
-                location_table = driver.find_element(By.XPATH,'/html/body/form/div/table/tbody/tr[3]/td/table/tbody')
-                location_table.find_element(By.XPATH,".//input[@value='"+ rows[location_index] + "']").click()
-                driver.find_element(By.XPATH,'/html/body/form/div/input[2]').click()
-                driver.switch_to.window(MainWindow)
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, dtm_start_xpath)))
+                try:
+                    location = tab_body.find_element(By.XPATH, './/td[text()="' + str(i) + '."]').find_element(By.XPATH,'..') \
+                        .find_element(By.XPATH, ".//input[@name='loc" + str(i) + "']").find_element(By.XPATH,'./following-sibling::a')
+                    location.click()
+                    Location_Window = driver.window_handles[1]
+                    driver.switch_to.window(Location_Window)
+                    location_table = driver.find_element(By.XPATH,'/html/body/form/div/table/tbody/tr[3]/td/table/tbody')
+                    location_table.find_element(By.XPATH,".//input[@value='"+ rows[location_index] + "']").click()
+                    driver.find_element(By.XPATH,'/html/body/form/div/input[2]').click()
+                    driver.switch_to.window(MainWindow)
+                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, dtm_start_xpath)))
+                except Exception as ex :
+                    print("error during filling of location")
+                    print(ex)
+                    raise
+                    exit
                 i += 1
             #save and return
             driver.find_element(By.XPATH,save_button_xpath).click()
             obj = driver.switch_to.alert
             obj.accept()
             driver.find_element(By.XPATH,return_button_xpath).click()
-        except:
+        except Exception as ex :
             print("something wrong")
-            continue
+            print(ex)
+            raise
+            exit
 
 
 
